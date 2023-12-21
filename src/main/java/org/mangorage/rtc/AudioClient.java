@@ -18,7 +18,7 @@ public class AudioClient extends Thread {
 
     public AudioClient(String IP, int port) {
         try {
-            Socket socket = new Socket("localhost", port);
+            Socket socket = new Socket(IP, port);
             this.outputStream = new DataOutputStream(socket.getOutputStream());
             this.inputStream = new DataInputStream(socket.getInputStream());
             this.lineWriter = new LineWriter();
@@ -28,7 +28,7 @@ public class AudioClient extends Thread {
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
-            }, 1024);
+            }, Constants.BUFFER_SIZE);
 
             lineListener.start();
         } catch (IOException e) {
@@ -38,7 +38,7 @@ public class AudioClient extends Thread {
 
     @Override
     public void run() {
-        byte[] buffer = new byte[1024];
+        byte[] buffer = new byte[Constants.BUFFER_SIZE];
         while (true) {
             try {
                 int bytesReceived = inputStream.read(buffer);
@@ -50,6 +50,6 @@ public class AudioClient extends Thread {
     }
 
     public static void main(String[] args) {
-        new AudioClient("localhost", Constants.PORT).start();
+        new AudioClient("10.0.0.170", Constants.PORT).start();
     }
 }

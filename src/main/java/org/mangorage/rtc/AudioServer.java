@@ -21,13 +21,6 @@ public class AudioServer {
 
     public AudioServer() {
         try {
-            // Set up audio capture
-            AudioFormat format = new AudioFormat(44100, 16, 2, true, true);
-            DataLine.Info info = new DataLine.Info(TargetDataLine.class, format);
-            TargetDataLine targetLine = (TargetDataLine) AudioSystem.getLine(info);
-            targetLine.open(format);
-            targetLine.start();
-
             ServerSocket serverSocket = new ServerSocket(Constants.PORT);
             System.out.println("Audio server is running...");
 
@@ -36,6 +29,7 @@ public class AudioServer {
                 Socket clientSocket = serverSocket.accept();
                 var client = new ConnectedClient(this, clientSocket);
                 clients.add(client);
+                System.out.println("Client Connected");
                 client.start();
             }
         } catch (Exception e) {
@@ -45,18 +39,20 @@ public class AudioServer {
 
     public void closed(ConnectedClient client) {
         clients.remove(client);
+        client.disconnect();
+        System.out.println("Client Disconnected");
     }
 
     public void sendToAllExceptThis(ConnectedClient client, byte[] data, int bytesRead) {
-        try {
-            for (ConnectedClient clientB : clients) {
-                if (clientB == client) continue; //  Don't send to this client
-                var stream = clientB.getStream();
-                if (stream == null) continue;
+        for (ConnectedClient clientB : clients) {
+            //if (clientB == client) continue; //  Don't send to this client
+            var stream = clientB.getStream();
+            if (stream == null) continue;
+            try {
                 stream.write(data, 0, bytesRead);
+            } catch (IOException e) {
+                closed(clientB);
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 }

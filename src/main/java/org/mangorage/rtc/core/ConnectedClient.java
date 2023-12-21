@@ -24,25 +24,26 @@ public class ConnectedClient extends Thread {
         return null;
     }
 
+    public void disconnect() {
+        try {
+            clientSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     @Override
     public void run() {
-        byte[] buffer = new byte[1024];
+        byte[] buffer = new byte[Constants.BUFFER_SIZE];
         while (clientSocket.isConnected() || !clientSocket.isClosed()) {
             try {
                 int read = inputStream.read(buffer);
                 server.sendToAllExceptThis(this, buffer, read);
             } catch (IOException e) {
-                try {
-                    clientSocket.close();
-                    outputStream.close();
-                    inputStream.close();
-                } catch (IOException ex) {
-                    throw new RuntimeException(ex);
-                }
+                server.closed(this);
             }
         }
 
-        System.out.println("Client Closed");
         server.closed(this);
     }
 }
