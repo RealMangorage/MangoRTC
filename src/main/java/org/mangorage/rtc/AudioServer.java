@@ -9,6 +9,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Arrays;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class AudioServer {
@@ -45,11 +46,12 @@ public class AudioServer {
 
     public void sendToAllExceptThis(ConnectedClient client, byte[] data, int bytesRead) {
         for (ConnectedClient clientB : clients) {
+            byte[] copy = Arrays.copyOf(data, data.length);
             //if (clientB == client) continue; //  Don't send to this client
             var stream = clientB.getStream();
             if (stream == null) continue;
             try {
-                stream.write(data, 0, bytesRead);
+                stream.write(copy, 0, bytesRead);
             } catch (IOException e) {
                 closed(clientB);
             }
